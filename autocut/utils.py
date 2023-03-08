@@ -8,6 +8,8 @@ import opencc
 
 def is_video(filename):
     _, ext = os.path.splitext(filename)
+    if "_cut" in _:
+        return False
     return ext in [".mp4", ".mov", ".mkv", ".avi", ".flv", ".f4v", ".webm"]
 
 
