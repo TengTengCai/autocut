@@ -99,7 +99,7 @@ class Cutter:
                 return
             index = []
             for mark, sent in md.tasks():
-                if not mark:
+                if not mark and not md.all_selecting():
                     continue
                 m = re.match(r"\[(\d+)", sent.strip())
                 if m:
@@ -118,12 +118,15 @@ class Cutter:
                     {"start": x.start.total_seconds(), "end": x.end.total_seconds()}
                 )
             else:
-                if x.start.total_seconds() - segments[-1]["end"] < 0.5:
-                    segments[-1]["end"] = x.end.total_seconds()
-                else:
-                    segments.append(
-                        {"start": x.start.total_seconds(), "end": x.end.total_seconds()}
-                    )
+                # if x.start.total_seconds() - segments[-1]["end"] < 0.5:
+                #     segments[-1]["end"] = x.end.total_seconds()
+                # else:
+                #     segments.append(
+                #         {"start": x.start.total_seconds(), "end": x.end.total_seconds()}
+                #     )
+                segments.append(
+                    {"start": x.start.total_seconds(), "end": x.end.total_seconds()}
+                )
 
         if is_video_file:
             media = editor.VideoFileClip(fns["media"])
@@ -138,20 +141,28 @@ class Cutter:
         # final_clip = editor.concatenate_videoclips(clips, padding = -fade)
 
         clips = [media.subclip(s["start"], s["end"]) for s in segments]
+        base_name = os.path.basename(output_fn)
+        dir_path = os.path.join(os.path.dirname(output_fn), os.path.splitext(base_name)[0])
+
         if is_video_file:
-            final_clip: editor.VideoClip = editor.concatenate_videoclips(clips)
-            logging.info(
-                f"Reduced duration from {media.duration:.1f} to {final_clip.duration:.1f}"
-            )
-
-            aud = final_clip.audio.set_fps(44100)
-            final_clip = final_clip.without_audio().set_audio(aud)
-            final_clip = final_clip.fx(editor.afx.audio_normalize)
-
-            # an alternative to birate is use crf, e.g. ffmpeg_params=['-crf', '18']
-            final_clip.write_videofile(
-                output_fn, audio_codec="aac", bitrate=self.args.bitrate
-            )
+            if len(clips) == 0:
+                os.makedirs(dir_path, exist_ok=True)
+                return
+            for i, item_clip in enumerate(clips):
+                logging.info(
+                    f"Reduced duration from {media.duration:.1f} to {item_clip.duration:.1f}"
+                )
+                aud = item_clip.audio.set_fps(44100)
+                item_clip = item_clip.without_audio().set_audio(aud)
+                item_clip = item_clip.fx(editor.afx.audio_normalize)
+                name = f"{os.path.splitext(base_name)[0]}_{i}"
+                suff = os.path.splitext(base_name)[1]
+                os.makedirs(dir_path, exist_ok=True)
+                output_item_fn = os.path.join(dir_path, f"{name}{suff}")
+                # an alternative to birate is use crf, e.g. ffmpeg_params=['-crf', '18']
+                item_clip.write_videofile(
+                    output_item_fn, audio_codec="aac", bitrate=self.args.bitrate
+                )
         else:
             final_clip: editor.AudioClip = editor.concatenate_audioclips(clips)
             logging.info(

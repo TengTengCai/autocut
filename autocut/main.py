@@ -2,7 +2,7 @@ import argparse
 import logging
 import os
 
-from . import utils
+from autocut import utils
 
 
 def main():
@@ -66,7 +66,7 @@ def main():
     parser.add_argument(
         "--bitrate",
         type=str,
-        default="10m",
+        default="2m",
         help="The bitrate to export the cutted video, such as 10m, 1m, or 500k",
     )
     parser.add_argument(
@@ -114,7 +114,7 @@ def main():
 
         Cutter(args).run()
     elif args.daemon:
-        from .daemon import Daemon
+        from autocut.daemon import Daemon
 
         Daemon(args).run()
     elif args.s:

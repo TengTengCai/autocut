@@ -8,6 +8,8 @@ import opencc
 
 def is_video(filename):
     _, ext = os.path.splitext(filename)
+    if "_cut" in _:
+        return False
     return ext in [".mp4", ".mov", ".mkv", ".avi", ".flv", ".f4v", ".webm"]
 
 
@@ -24,6 +26,11 @@ def change_ext(filename, new_ext):
     return base + new_ext
 
 
+def del_ext(filename, new_ext):
+    # Change the extension of filename to new_ext
+    base, _ = os.path.splitext(filename)
+    return base
+
 def add_cut(filename):
     # Add cut mark to the filename
     base, ext = os.path.splitext(filename)
@@ -39,6 +46,7 @@ class MD:
     def __init__(self, filename, encoding):
         self.lines = []
         self.EDIT_DONE_MAKR = "<-- Mark if you are done editing."
+        self.SELECT_ALL_MAKR = "<-- Mark If you want to choose all."
         self.encoding = encoding
         self.filename = filename
         if filename:
@@ -71,6 +79,12 @@ class MD:
                 return True
         return False
 
+    def all_selecting(self):
+        for m, t in self.tasks():
+            if m and self.SELECT_ALL_MAKR in t:
+                return True
+        return False
+
     def add(self, line):
         self.lines.append(line)
 
@@ -79,6 +93,9 @@ class MD:
 
     def add_done_editing(self, mark):
         self.add_task(mark, self.EDIT_DONE_MAKR)
+
+    def add_select_all(self, mark):
+        self.add_task(mark, self.SELECT_ALL_MAKR)
 
     def add_video(self, video_fn):
         ext = os.path.splitext(video_fn)[1][1:]
@@ -93,6 +110,12 @@ class MD:
             return None, line
         return m.groups()[0].lower() == "x", m.groups()[1]
 
+    def _all_task_status(self, line):
+        # return (is_marked, rest) or (None, line) if not a task
+        m = re.match(r"- +\[([ x])\] +(.*)", line)
+        if not m:
+            return None, line
+        return m.groups()[0].lower() == "x", m.groups()[1]
 
 def check_exists(output, force):
     if os.path.exists(output):
@@ -195,6 +218,7 @@ def trans_srt_to_md(encoding, force, srt_fn, video_fn=None):
     md = MD(md_fn, encoding)
     md.clear()
     md.add_done_editing(False)
+    md.add_select_all(False)
     if video_fn:
         if not is_video(video_fn):
             logging.fatal(f"{video_fn} may not be a video")

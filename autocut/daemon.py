@@ -44,9 +44,7 @@ class Daemon:
                     continue
                 md = utils.MD(md_fn, self.args.encoding)
                 ext = "mp4" if is_video_file else "mp3"
-                if not md.done_editing() or os.path.exists(
-                    utils.change_ext(utils.add_cut(f), ext)
-                ):
+                if not md.done_editing() or os.path.exists(utils.del_ext(utils.add_cut(md_fn), ext)):
                     continue
                 args.inputs = [f, md_fn, srt_fn]
                 cut.Cutter(args).run()
