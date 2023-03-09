@@ -75,6 +75,28 @@ class Cutter:
     def __init__(self, args):
         self.args = args
 
+    def test(self, clips, media, output_fn):
+        for i, item_clip in enumerate(clips):
+            logging.info(
+                f"Reduced duration from {media.duration:.1f} to {item_clip.duration:.1f}"
+            )
+
+            aud = item_clip.audio.set_fps(44100)
+            item_clip = item_clip.without_audio().set_audio(aud)
+            item_clip = item_clip.fx(editor.afx.audio_normalize)
+
+            base_name = os.path.basename(output_fn)
+            name = f"{os.path.splitext(base_name)[0]}_{i}"
+            suff = os.path.splitext(base_name)[1]
+            dir_path = os.path.join(os.path.dirname(output_fn), os.path.splitext(base_name)[0])
+            os.makedirs(dir_path, exist_ok=True)
+            output_item_fn = os.path.join(dir_path, f"{name}{suff}")
+
+            # an alternative to birate is use crf, e.g. ffmpeg_params=['-crf', '18']
+            item_clip.write_videofile(
+                output_item_fn, audio_codec="aac", bitrate=self.args.bitrate
+            )
+
     def run(self):
         fns = {"srt": None, "media": None, "md": None}
         for fn in self.args.inputs:

@@ -2,7 +2,7 @@ import argparse
 import logging
 import os
 
-from autocut import utils
+from . import utils
 
 
 def main():
@@ -114,7 +114,7 @@ def main():
 
         Cutter(args).run()
     elif args.daemon:
-        from autocut.daemon import Daemon
+        from .daemon import Daemon
 
         Daemon(args).run()
     elif args.s:
