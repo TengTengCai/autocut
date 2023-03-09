@@ -106,7 +106,7 @@ def main():
         elif len(args.inputs) == 1:
             trans_srt_to_md(args.encoding, args.force, args.inputs[0])
         else:
-            logging.warn(
+            logging.warning(
                 "Wrong number of files, please pass in a .srt file or an additional video file"
             )
     elif args.cut:
@@ -120,7 +120,7 @@ def main():
     elif args.s:
         utils.compact_rst(args.inputs[0], args.encoding)
     else:
-        logging.warn("No action, use -c, -t or -d")
+        logging.warning("No action, use -c, -t or -d")
 
 
 if __name__ == "__main__":
